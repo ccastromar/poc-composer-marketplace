@@ -1,0 +1,209 @@
+/**
+ * Access Control List 
+ */
+rule TransportistaPuedeCrearEnvio {
+description: "Agricultor puede crear envío"
+  participant: "com.marketplace.Transportista"
+  operation: ALL
+  resource: "com.marketplace.Envio"
+  action: ALLOW
+}
+
+rule SensorPuedeActualizarProducto {
+description: "Sensor puede actulizar producto"
+  participant: "com.marketplace.SensorGranja"
+  operation: ALL
+  resource: "com.marketplace.Producto"
+  action: ALLOW
+}
+rule SensorPuedeCrearLectura {
+description: "Sensor puede crear lectura"
+  participant: "com.marketplace.SensorGranja"
+  operation: ALL
+  resource: "com.marketplace.RegistrarLecturaSensor"
+  action: ALLOW
+}
+
+rule AgricultorPuedeCrearContratoLogistico {
+description: "Agricultor puede crear contrato logistico"
+  participant: "com.marketplace.Agricultor"
+  operation: ALL
+  resource: "com.marketplace.ContratoLogistica"
+  action: ALLOW
+}
+
+rule AgricultorPuedeCrearProducto {
+description: "Agricultor puede crear producto"
+  participant: "com.marketplace.Agricultor"
+  operation: ALL
+  resource: "com.marketplace.Producto"
+  action: ALLOW
+}
+
+rule AgricultorPuedeCrearSubasta {
+description: "Agricultor puede crear subasta"
+  participant: "com.marketplace.Agricultor"
+  operation: ALL
+  resource: "com.marketplace.Lote"
+  action: ALLOW
+}
+
+rule AgricultorPuedeCerrarSubasta {
+description: "Agricultor puede cerrar subasta"
+  participant: "com.marketplace.Agricultor"
+  operation: ALL
+  resource: "com.marketplace.CerrarSubasta"
+  action: ALLOW
+}
+
+rule AgricultorPuedeRealizarEnvio {
+description: "Agricultor puede realizar envio"
+  participant: "com.marketplace.Agricultor"
+  operation: ALL
+  resource: "com.marketplace.RealizarEnvio"
+  action: ALLOW
+}
+
+rule CompradorPuedeVerAgricultor {
+description: "Comprador puede ver agricultor"
+  participant: "com.marketplace.Comprador"
+  operation: READ
+  resource: "com.marketplace.Agricultor"
+  action: ALLOW
+}
+
+rule CompradorPuedeValorar {
+description: "Comprador puede valorar"
+  participant: "com.marketplace.Comprador"
+  operation: ALL
+  resource: "com.marketplace.RealizarValoracion"
+  action: ALLOW
+}
+
+//mejorar metodo
+rule CompradorPuedeactualizarAgricultor {
+description: "Comprador puede actualizar agricultor"
+  participant: "com.marketplace.Comprador"
+  operation: UPDATE
+  resource: "com.marketplace.Agricultor"
+  action: ALLOW
+}
+
+
+
+rule CompradorPuedePujar {
+description: "Comprador puede pujar"
+  participant: "com.marketplace.Comprador"
+  operation: ALL
+  resource: "com.marketplace.Oferta"
+  action: ALLOW
+}
+
+rule CompradorRealizaPago {
+description: "Comprador realiza pago"
+  participant: "com.marketplace.Comprador"
+  operation: ALL
+  resource: "com.marketplace.RealizarPago"
+  action: ALLOW
+}
+
+rule CompradorAceptaEnvio {
+description: "Comprador acepta envio"
+  participant: "com.marketplace.Comprador"
+  operation: ALL
+  resource: "com.marketplace.AceptarEnvio"
+  action: ALLOW
+}
+rule CompradorActualizaEnvio {
+description: "Comprador actualiza envio"
+  participant: "com.marketplace.Comprador"
+  operation: ALL
+  resource: "com.marketplace.Envio"
+  action: ALLOW
+}
+
+rule CompradorPuedeVerLotes {
+description: "Comprador puede ver lotes"
+  participant: "com.marketplace.Comprador"
+  operation: READ, UPDATE
+  resource: "com.marketplace.Lote"
+  action: ALLOW
+}
+
+rule CompradorOwnCrud {
+description: "Comprador own crud"
+  participant(p): "com.marketplace.Comprador"
+  operation: READ, UPDATE
+  resource(v): "com.marketplace.Comprador"
+  condition: (v.getIdentifier() == p.getIdentifier())
+  action: ALLOW
+}
+
+rule AgricultorOwnCrud {
+description: "Agricultor own crud"
+  participant(p): "com.marketplace.Agricultor"
+  operation: READ, UPDATE
+  resource(v): "com.marketplace.Agricultor"
+  condition: (v.getIdentifier() == p.getIdentifier())
+  action: ALLOW
+}
+
+rule ProductOwner {
+description: "Owner producto acceso total"
+  participant(m): "com.marketplace.Agricultor"
+  operation: ALL
+  resource(v): "com.marketplace.Producto"
+  condition: (v.agricultor.getIdentifier() == m.getIdentifier())
+  action: ALLOW
+}
+
+rule LoteOwner {
+description: "Owner lote acceso total"
+  participant(m): "com.marketplace.Agricultor"
+  operation: ALL
+  resource(v): "com.marketplace.Lote"
+  condition: (v.producto.agricultor.getIdentifier() == m.getIdentifier())
+  action: ALLOW
+}
+
+rule CompradorHistory {
+  description: "Comprador ve su historico"
+  participant(t): "com.marketplace.Comprador"
+  operation: READ
+  resource(v): "org.hyperledger.composer.system.HistorianRecord"
+  condition: (v.participantInvoking.getIdentifier() != t.getIdentifier())
+  action: DENY
+}
+
+rule AgricultorHistory {
+  description: "Agricultor ve su historico"
+  participant(t): "com.marketplace.Agricultor"
+  operation: READ
+  resource(v): "org.hyperledger.composer.system.HistorianRecord"
+  condition: (v.participantInvoking.getIdentifier() != t.getIdentifier())
+  action: DENY
+}
+
+rule SystemACL {
+description:  "System ACL to permit all access"
+                participant: "org.hyperledger.composer.system.Participant"
+                operation: ALL
+                resource: "org.hyperledger.composer.system.**"
+                action: ALLOW
+}
+
+rule NetworkAdminUser {
+description: "Grant business network administrators full access to user resources"
+               participant: "org.hyperledger.composer.system.NetworkAdmin"
+               operation: ALL
+               resource: "**"
+               action: ALLOW
+}
+
+rule NetworkAdminSystem {
+description: "Grant business network administrators full access to system resources"
+               participant: "org.hyperledger.composer.system.NetworkAdmin"
+               operation: ALL
+               resource: "org.hyperledger.composer.system.**"
+               action: ALLOW
+}

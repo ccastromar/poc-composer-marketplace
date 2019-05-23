@@ -1,0 +1,257 @@
+namespace com.marketplace
+
+/////////////
+// COMUNES //
+///////////
+
+enum UnidadPeso {
+   o KILO 
+   o GRAMO
+   o ONZA
+}
+
+enum FormaPago {
+   o CREDIT_CARD
+   o PAYPAL
+   o TRANSFER
+   o ETHER
+   o BITCOIN  
+}
+
+enum EstadoEnvio {
+  o EN_PREPARACION
+  o EN_TRANSITO
+  o ENTREGADO
+}
+
+enum EstadoSubasta {
+  o EN_VENTA
+  o NO_CONSEGUIDA
+  o VENDIDA
+}
+
+enum EstadoLote {
+  o LOTE_CREADO
+  o PAGO_DIRECTO_COMPLETADO
+  o COMPRADOR_DEPOSITA_EN_ESCROW
+  o LOTE_ENVIADO
+  o LOTE_RECIBIDO_ACEPTADO
+}
+
+enum TipoProducto {
+  o FRUTA
+  o HORTALIZA
+}
+
+enum TipoTransporte {
+   o FURGONETA
+   o TRAILER
+   o TREN
+   o AVION
+   o BARCO
+}
+
+enum UbicacionSensor {
+  o BANCAL1
+  o BANCAL2
+  o INVERNADERO1
+  o INVERNADERO2
+  o NEVERA1
+  o NEVERA2
+  o TRANSPORTE
+}
+
+concept DatosContacto {
+  o String direccion
+  o String codigoPostal
+  o String poblacion
+  o String provincia
+  o String pais
+  o String telefono
+  o String email
+}
+
+concept DatosPago {
+  o String paypal default="pay@gmail.com"
+  o String cuentaBanco default="ES79 NNNN NNNN NNNN NNNN"
+  o String walletBitcoin default="15FXb32LgQYkzWGX5xyBnA8mmbDXF5exfA"
+  o String walletEther  default="0xb4124cEB3451635DAcedd11767f004d8a28c6eE7"
+}
+
+concept DatosCobro {
+  o String paypal default="pay@gmail.com"
+  o String cuentaBanco default="ES79 NNNN NNNN NNNN NNNN"
+  o String walletBitcoin default="15FXb32LgQYkzWGX5xyBnA8mmbDXF5exfA"
+  o String walletEther  default="0xa79dA4D3264FcE74245eAd936754b71ef2D316BA"
+}
+
+concept Valoracion {
+  o Integer puntuacion default=5
+  o String comentario
+  --> Comprador comprador
+  --> Lote lote
+}
+
+concept LecturaSensor {
+  --> SensorGranja sensor  
+  o Double temperatura
+  o Double humedad
+  o DateTime fecha
+  o UbicacionSensor ubicacion  
+}
+
+////////////
+// ASSETS //
+///////////
+
+asset Producto identified by pid {
+  o String pid 
+  o String descripcion default="Manzana"
+  o TipoProducto tipo default="FRUTA"
+  o String variedad default="GOLDEN"
+  o Integer numLotes default=1
+  o String tipoEnvase default="Caja"
+  o String categoria default="Primera"
+  o Boolean contieneFitosanitarios default=false
+  o Boolean esClimaterico default=false
+  o Boolean esEcologico default=false
+  o Boolean esComercioJusto default=false
+  o DateTime fechaRecoleccion 
+  o DateTime fechaEnvasado optional
+  o Integer cantidad default=1
+  o UnidadPeso unidad default="KILO"
+  --> Agricultor agricultor
+  o LecturaSensor[] lecturas optional
+}
+
+asset Lote identified by loteId {
+  o String loteId
+  o Double precio
+  o String descripcion
+  o Boolean usarEscrow
+  o String cuentaEscrow
+  o EstadoSubasta estadoSubasta default="EN_VENTA"
+  o EstadoLote estadoLote default="LOTE_CREADO"
+  o Oferta[] ofertas optional
+  --> Producto producto
+  --> Agricultor subastador
+  --> Comprador ganador optional
+  o Double precioFinal
+}
+  
+asset ContratoLogistica identified by contratoId {
+  o String contratoId
+  --> Agricultor agricultor
+  --> Transportista transportista
+  o DateTime fechaLlegada
+  o Double minTemperatura default=5.0
+  o Double maxTemperatura default=12.0
+  o Double minFactorPenalizacion default=0.9
+  o Double maxFactorPenalizacion default=0.4
+}  
+  
+asset Envio identified by envioId {
+  o String envioId
+  --> Producto producto
+  o EstadoEnvio estado default="EN_PREPARACION"
+  o LecturaSensor[] temperaturas optional
+  --> ContratoLogistica contrato optional
+  --> Transportista transportista
+  --> Agricultor agricultor
+  --> Comprador comprador
+}  
+
+///////////////////
+// PARTICIPANTES //
+//////////////////
+participant SensorGranja identified by sensorId {  
+   o String sensorId
+   o UbicacionSensor ubicacion  
+   --> Agricultor agricultor
+}
+
+participant SensorTransporte identified by sensorId {  
+   o String sensorId
+   o UbicacionSensor ubicacion  
+   --> Transportista transporste
+}  
+
+participant Transportista identified by transportistaId {  
+ o String transportistaId
+ o DatosContacto contacto optional
+ o String nif
+ o String nombre
+ o String apellidos optional
+ o TipoTransporte tipo
+ o DatosCobro datosCobro
+}
+  
+participant Comprador identified by compradorId {  
+ o String compradorId
+ o DatosContacto contacto optional
+ o String nif
+ o String nombre
+ o String apellidos optional
+ o DatosPago datosPago
+}
+
+participant Agricultor identified by agricultorId {
+   o String agricultorId
+   o DatosContacto contacto optional
+   o String nif
+   o String nombre   
+   o String apellidos optional
+   o Valoracion[] valoraciones optional
+   o DatosCobro datosCobro
+}
+
+//////////////////
+// TRANSACCIONES //
+//////////////////
+
+transaction Oferta {
+  o Double puja
+   --> Lote lote
+   --> Comprador comprador
+}
+
+transaction CerrarSubasta {
+  --> Lote lote
+}
+
+transaction RealizarValoracion {
+  o Integer puntuacion
+  o String comentario
+  --> Comprador comprador
+  --> Agricultor agricultor
+  --> Lote lote
+}
+
+transaction RegistrarLecturaSensor {
+  --> SensorGranja sensor
+   o String ubicacion default="BANCAL1"
+   o Double temperatura default=10.0
+   o Double humedad default=47.0
+  --> Producto producto   
+}
+  
+transaction RealizarEnvio {
+  --> Envio envio 
+  --> Lote lote
+}
+
+transaction AceptarEnvio {
+  --> Envio envio  
+  --> Lote lote
+}
+  
+transaction RealizarPago {
+   --> Lote lote 
+   o FormaPago formaPago default="ETHER"
+}
+
+transaction CrearContratoTransporte {
+ o String contratoId
+ --> Transportista transportista
+ --> Agricultor agricultor  
+}
